@@ -1,0 +1,58 @@
+name: 🧾 Support Ticket
+description: Create a private support ticket (auto-routed to our helpdesk)
+title: "[Ticket] <brief summary>"
+labels: ["ticket"]
+body:
+  - type: input
+    id: email
+    attributes:
+      label: Contact email
+      description: We'll reply here
+      placeholder: you@example.com
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Low — minor issue / question
+        - Medium — affecting a feature
+        - High — blocking my work
+        - Critical — system down
+    validations:
+      required: true
+  - type: input
+    id: product
+    attributes:
+      label: Product/area
+      placeholder: e.g. "Chrome extension", "API", "Dashboard"
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps help us reproduce
+      placeholder: |
+        1. Go to …
+        2. Click …
+        3. See error …
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result / error message
+  - type: textarea
+    id: extra
+    attributes:
+      label: Extra context / links
+      description: Links, screenshots, or logs
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Privacy
+      options:
+        - label: I understand this issue will be redacted & closed publicly and handled privately.
+          required: true
