@@ -60,8 +60,7 @@ jobs:
           CONTACT_ID=$(jq -r '.contact.id // .id // empty' contact_resp.json)
           echo "CONTACT_ID=$CONTACT_ID" >> $GITHUB_OUTPUT || true
 
-            - name: Create Opportunity in GHL
-        id: opp
+      - name: Create Opportunity in GHL
         run: |
           set -e
           AUTH="Authorization: Bearer ${{ secrets.GHL_API_KEY }}"
