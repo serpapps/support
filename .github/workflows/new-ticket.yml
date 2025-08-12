@@ -60,7 +60,7 @@ jobs:
           CONTACT_ID=$(jq -r '.contact.id // .id // empty' contact_resp.json)
           echo "CONTACT_ID=$CONTACT_ID" >> $GITHUB_OUTPUT || true
 
-      - name: Create Opportunity in GHL
+            - name: Create Opportunity in GHL
         id: opp
         run: |
           set -e
@@ -74,9 +74,10 @@ jobs:
             --arg stage "${{ secrets.GHL_STAGE_ID }}" \
             --arg title "${{ github.event.issue.title }}" \
             --arg desc "From: ${{ github.event.issue.html_url }}\n\n${{ github.event.issue.body || '' }}" \
-            --argjson contactId "\"${{ steps.contact.outputs.CONTACT_ID }}\"" \
-            --argjson assigneeId "\"${{ secrets.GHL_USER_ID || '' }}\"" \
-            '{
+            --arg contactId "${{ steps.contact.outputs.CONTACT_ID }}" \
+            --arg assigneeId "${{ secrets.GHL_USER_ID }}" \
+            '
+            {
               locationId: $loc,
               pipelineId: $pipeline,
               stageId: $stage,
@@ -85,19 +86,22 @@ jobs:
               monetaryValue: 0,
               notes: $desc
             }
-            + ( $contactId == "\"\"" ? {} : { contactId: ($contactId | fromjson) } )
-            + ( $assigneeId == "\"\"" ? {} : { assignedUserId: ($assigneeId | fromjson) } )
+            | if ($contactId|length) > 0 then .contactId = $contactId else . end
+            | if ($assigneeId|length) > 0 then .assignedUserId = $assigneeId else . end
             ' > opp.json
 
-          # POST /opportunities
+          echo "---- opp.json ----"
+          cat opp.json
+
           RESP=$(curl -sS -X POST "https://services.leadconnectorhq.com/opportunities/" \
             -H "$AUTH" -H "$VER" -H "$CT" \
             --data-binary @opp.json)
 
-          echo "$RESP" > opp_resp.json
-          echo "STATUS=$(jq -r '.status // .success // empty' opp_resp.json)" >> $GITHUB_OUTPUT || true
-        # Create Opportunity endpoint is documented in GHL’s public API. 
-        # Ref: Create Opportunity.  [oai_citation:5‡GoHighLevel Marketplace](https://marketplace.gohighlevel.com/docs/ghl/opportunities/create-opportunity/index.html?utm_source=chatgpt.com)
+          echo "---- GHL response ----"
+          echo "$RESP" | jq . || echo "$RESP"  # show raw if not JSON
+
+          # expose a simple status for later steps/logs
+          echo "STATUS=$(echo "$RESP" | jq -r '.status // .success // empty')" >> $GITHUB_OUTPUT || true
 
       - name: Acknowledge in GitHub
         uses: actions/github-script@v7
