@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Submit a Support Ticket</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --card: #121821;
+      --txt: #e7edf3;
+      --muted: #A8B3BF;
+      --bd: #2a3240;
+      --accent: #0ea5e9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .wrap {
+      width: 100%;
+      max-width: 900px;
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      text-align: center;
+    }
+    p {
+      margin: 0 0 20px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 16px;
+    }
+    iframe {
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      min-height: 700px; /* ensure mobile shows full form */
+      background: transparent;
+    }
+    @media (max-width: 600px) {
+      .wrap { padding: 16px; }
+      iframe { min-height: 800px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Submit a Support Ticket</h1>
+    <p>We’ll email you when we reply. Attach any screenshots or logs that may help us assist you.</p>
+
+    <iframe
+      src="https://ghl.serp.co/widget/form/ybZxZqEs8yMsGjLGhtJ4"
+      id="inline-ybZxZqEs8yMsGjLGhtJ4"
+      data-layout="{'id':'INLINE'}"
+      data-trigger-type="alwaysShow"
+      data-activation-type="alwaysActivated"
+      data-deactivation-type="neverDeactivate"
+      data-form-name="Support Ticket Form"
+      data-height="654"
+      data-layout-iframe-id="inline-ybZxZqEs8yMsGjLGhtJ4"
+      data-form-id="ybZxZqEs8yMsGjLGhtJ4"
+      title="Support Ticket Form">
+    </iframe>
+
+    <script src="https://ghl.serp.co/js/form_embed.js"></script>
+  </div>
+</body>
+</html>
