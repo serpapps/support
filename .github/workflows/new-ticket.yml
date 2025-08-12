@@ -1,4 +1,4 @@
-name: Send new issues to GHL (API) and redact
+name: Send new GitHub issues to GHL (v2, PAT) + redact
 
 on:
   issues:
@@ -8,99 +8,120 @@ permissions:
   contents: read
   issues: write
 
+# REQUIRED SECRETS (Repo → Settings → Secrets and variables → Actions)
+# - GHL_PAT_TOKEN     → Private Access Token from GHL "Private Integrations" (NOT the old API key)
+# - GHL_LOCATION_ID   → Your Location (sub-account) ID
+# - GHL_PIPELINE_ID   → Pipeline ID for opportunities
+# - GHL_STAGE_ID      → Default stage ID within that pipeline
+# OPTIONAL:
+# - GHL_USER_ID       → Assign opportunity to this user/agent (optional)
+
 jobs:
   to-ghl:
     runs-on: ubuntu-latest
     steps:
-      - name: Prepare payload
+      - name: Extract fields from issue
         id: prep
         uses: actions/github-script@v7
         with:
           script: |
-            const issue = context.payload.issue;
-            // Try to extract an email from the body so we can upsert a contact
-            const emailMatch = (issue.body || "").match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
-            const email = emailMatch ? emailMatch[0] : null;
-            const name = issue.user?.login || "GitHub User";
-            const phoneMatch = (issue.body || "").match(/\+?[0-9()\-.\s]{7,}/);
-            const phone = phoneMatch ? phoneMatch[0] : null;
+            const issue = context.payload.issue || {};
+            const body = issue.body || "";
 
-            core.setOutput('email', email || '');
+            // Pull the first email found in the body (from the Issue Form)
+            const emailMatch = body.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+            const email = emailMatch ? emailMatch[0] : "";
+
+            // Try to pull a phone (very loose)
+            const phoneMatch = body.match(/\+?[0-9()\-.\s]{7,}/);
+            const phone = phoneMatch ? phoneMatch[0] : "";
+
+            // Use GH login as a fallback "name"
+            const name = (issue.user && issue.user.login) ? issue.user.login : "GitHub User";
+
+            core.setOutput('title', issue.title || "New ticket");
+            core.setOutput('url', issue.html_url || "");
+            core.setOutput('body', body);
+            core.setOutput('email', email);
+            core.setOutput('phone', phone);
             core.setOutput('name', name);
-            core.setOutput('phone', phone || '');
 
-      - name: Upsert Contact in GHL
+      - name: Upsert Contact in GHL (v2)
         id: contact
-        if: always()
         run: |
           set -e
-          AUTH="Authorization: Bearer ${{ secrets.GHL_API_KEY }}"
+          AUTH="Authorization: Bearer ${{ secrets.GHL_PAT_TOKEN }}"
           VER="Version: 2021-07-28"
           CT="Content-Type: application/json"
-          # Contact upsert requires locationId + either email or phone
+          AC="Accept: application/json"
+
+          # Build contact payload. locationId is required.
           jq -n \
             --arg loc "${{ secrets.GHL_LOCATION_ID }}" \
-            --arg email "${{ steps.prep.outputs.email }}" \
             --arg name "${{ steps.prep.outputs.name }}" \
+            --arg email "${{ steps.prep.outputs.email }}" \
             --arg phone "${{ steps.prep.outputs.phone }}" \
             '{
               locationId: $loc,
-              email: ($email | select(length>0)),
-              name: $name,
-              phone: ($phone | select(length>0))
-            }' > contact.json
+              name: $name
+            }
+            | if ($email|length) > 0 then .email = $email else . end
+            | if ($phone|length) > 0 then .phone = $phone else . end
+            ' > contact.json
 
-          # POST /contacts (LeadConnector Integrations API)
-          # Docs: services.leadconnectorhq.com/contacts (Stoplight)
+          echo "---- contact.json (request) ----"
+          cat contact.json
+
           RESP=$(curl -sS -X POST "https://services.leadconnectorhq.com/contacts/" \
-            -H "$AUTH" -H "$VER" -H "$CT" \
+            -H "$AUTH" -H "$VER" -H "$CT" -H "$AC" \
             --data-binary @contact.json)
 
-          echo "$RESP" > contact_resp.json
-          CONTACT_ID=$(jq -r '.contact.id // .id // empty' contact_resp.json)
+          echo "---- contact response ----"
+          echo "$RESP" | jq . || echo "$RESP"
+
+          # Try multiple shapes GHL may return
+          CONTACT_ID=$(echo "$RESP" | jq -r '.contact.id // .id // .data.id // empty')
           echo "CONTACT_ID=$CONTACT_ID" >> $GITHUB_OUTPUT || true
 
-      - name: Create Opportunity in GHL
+      - name: Create Opportunity in GHL (v2)
         run: |
           set -e
-          AUTH="Authorization: Bearer ${{ secrets.GHL_API_KEY }}"
+          AUTH="Authorization: Bearer ${{ secrets.GHL_PAT_TOKEN }}"
           VER="Version: 2021-07-28"
           CT="Content-Type: application/json"
+          AC="Accept: application/json"
 
           jq -n \
             --arg loc "${{ secrets.GHL_LOCATION_ID }}" \
             --arg pipeline "${{ secrets.GHL_PIPELINE_ID }}" \
             --arg stage "${{ secrets.GHL_STAGE_ID }}" \
-            --arg title "${{ github.event.issue.title }}" \
-            --arg desc "From: ${{ github.event.issue.html_url }}\n\n${{ github.event.issue.body || '' }}" \
+            --arg title "${{ steps.prep.outputs.title }}" \
+            --arg url "${{ steps.prep.outputs.url }}" \
+            --arg desc "${{ steps.prep.outputs.body }}" \
             --arg contactId "${{ steps.contact.outputs.CONTACT_ID }}" \
             --arg assigneeId "${{ secrets.GHL_USER_ID }}" \
-            '
-            {
+            '{
               locationId: $loc,
               pipelineId: $pipeline,
               stageId: $stage,
               name: $title,
               status: "open",
               monetaryValue: 0,
-              notes: $desc
+              notes: ("From: " + $url + "\n\n" + $desc)
             }
             | if ($contactId|length) > 0 then .contactId = $contactId else . end
             | if ($assigneeId|length) > 0 then .assignedUserId = $assigneeId else . end
             ' > opp.json
 
-          echo "---- opp.json ----"
+          echo "---- opp.json (request) ----"
           cat opp.json
 
-          RESP=$(curl -sS -X POST "https://services.leadconnectorhq.com/opportunities/" \
-            -H "$AUTH" -H "$VER" -H "$CT" \
+          ORESP=$(curl -sS -X POST "https://services.leadconnectorhq.com/opportunities/" \
+            -H "$AUTH" -H "$VER" -H "$CT" -H "$AC" \
             --data-binary @opp.json)
 
-          echo "---- GHL response ----"
-          echo "$RESP" | jq . || echo "$RESP"  # show raw if not JSON
-
-          # expose a simple status for later steps/logs
-          echo "STATUS=$(echo "$RESP" | jq -r '.status // .success // empty')" >> $GITHUB_OUTPUT || true
+          echo "---- opportunity response ----"
+          echo "$ORESP" | jq . || echo "$ORESP"
 
       - name: Acknowledge in GitHub
         uses: actions/github-script@v7
@@ -109,11 +130,10 @@ jobs:
             await github.rest.issues.createComment({
               ...context.repo,
               issue_number: context.payload.issue.number,
-              body: "✅ Received — we created a private support record in our system and will follow up by email."
+              body: "✅ Received — we created a private support record in our desk and will follow up by email."
             });
 
       - name: Redact & close the public issue
-        if: always()
         uses: actions/github-script@v7
         with:
           script: |
