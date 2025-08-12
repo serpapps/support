@@ -4,13 +4,27 @@
   <meta charset="utf-8" />
   <title>Submit a Support Ticket</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- Google Tag Manager -->
+  <script>
+    (function(w,d,s,l,i){w[l]=w[l]||[];
+      w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});
+      var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
+      j.async=true;
+      j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+      f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-KMQFQBSH');
+  </script>
+  <!-- End Google Tag Manager -->
+
   <style>
     :root {
-      --bg: #0b0f14;
-      --card: #121821;
-      --txt: #e7edf3;
-      --muted: #A8B3BF;
-      --bd: #2a3240;
+      --bg: #ffffff;
+      --card: #ffffff;
+      --txt: #222222;
+      --muted: #555555;
+      --bd: #dddddd;
       --accent: #0ea5e9;
     }
     * { box-sizing: border-box; }
@@ -21,18 +35,18 @@
       color: var(--txt);
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       min-height: 100vh;
-      padding: 20px;
+      padding: 40px 20px;
     }
     .wrap {
       width: 100%;
       max-width: 900px;
       background: var(--card);
       border: 1px solid var(--bd);
-      border-radius: 16px;
+      border-radius: 12px;
       padding: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      box-shadow: 0 4px 20px rgba(0,0,0,.05);
     }
     h1 {
       margin: 0 0 8px;
@@ -49,7 +63,7 @@
       width: 100%;
       border: none;
       border-radius: 8px;
-      min-height: 700px; /* ensure mobile shows full form */
+      min-height: 700px;
       background: transparent;
     }
     @media (max-width: 600px) {
@@ -59,6 +73,14 @@
   </style>
 </head>
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KMQFQBSH"
+            height="0" width="0"
+            style="display:none;visibility:hidden"></iframe>
+  </noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
   <div class="wrap">
     <h1>Submit a Support Ticket</h1>
     <p>We’ll email you when we reply. Attach any screenshots or logs that may help us assist you.</p>
