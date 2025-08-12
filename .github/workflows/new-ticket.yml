@@ -1,0 +1,133 @@
+name: Send new issues to GHL (API) and redact
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  to-ghl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare payload
+        id: prep
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            // Try to extract an email from the body so we can upsert a contact
+            const emailMatch = (issue.body || "").match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+            const email = emailMatch ? emailMatch[0] : null;
+            const name = issue.user?.login || "GitHub User";
+            const phoneMatch = (issue.body || "").match(/\+?[0-9()\-.\s]{7,}/);
+            const phone = phoneMatch ? phoneMatch[0] : null;
+
+            core.setOutput('email', email || '');
+            core.setOutput('name', name);
+            core.setOutput('phone', phone || '');
+
+      - name: Upsert Contact in GHL
+        id: contact
+        if: always()
+        run: |
+          set -e
+          AUTH="Authorization: Bearer ${{ secrets.GHL_API_KEY }}"
+          VER="Version: 2021-07-28"
+          CT="Content-Type: application/json"
+          # Contact upsert requires locationId + either email or phone
+          jq -n \
+            --arg loc "${{ secrets.GHL_LOCATION_ID }}" \
+            --arg email "${{ steps.prep.outputs.email }}" \
+            --arg name "${{ steps.prep.outputs.name }}" \
+            --arg phone "${{ steps.prep.outputs.phone }}" \
+            '{
+              locationId: $loc,
+              email: ($email | select(length>0)),
+              name: $name,
+              phone: ($phone | select(length>0))
+            }' > contact.json
+
+          # POST /contacts (LeadConnector Integrations API)
+          # Docs: services.leadconnectorhq.com/contacts (Stoplight)
+          RESP=$(curl -sS -X POST "https://services.leadconnectorhq.com/contacts/" \
+            -H "$AUTH" -H "$VER" -H "$CT" \
+            --data-binary @contact.json)
+
+          echo "$RESP" > contact_resp.json
+          CONTACT_ID=$(jq -r '.contact.id // .id // empty' contact_resp.json)
+          echo "CONTACT_ID=$CONTACT_ID" >> $GITHUB_OUTPUT || true
+
+      - name: Create Opportunity in GHL
+        id: opp
+        run: |
+          set -e
+          AUTH="Authorization: Bearer ${{ secrets.GHL_API_KEY }}"
+          VER="Version: 2021-07-28"
+          CT="Content-Type: application/json"
+
+          jq -n \
+            --arg loc "${{ secrets.GHL_LOCATION_ID }}" \
+            --arg pipeline "${{ secrets.GHL_PIPELINE_ID }}" \
+            --arg stage "${{ secrets.GHL_STAGE_ID }}" \
+            --arg title "${{ github.event.issue.title }}" \
+            --arg desc "From: ${{ github.event.issue.html_url }}\n\n${{ github.event.issue.body || '' }}" \
+            --argjson contactId "\"${{ steps.contact.outputs.CONTACT_ID }}\"" \
+            --argjson assigneeId "\"${{ secrets.GHL_USER_ID || '' }}\"" \
+            '{
+              locationId: $loc,
+              pipelineId: $pipeline,
+              stageId: $stage,
+              name: $title,
+              status: "open",
+              monetaryValue: 0,
+              notes: $desc
+            }
+            + ( $contactId == "\"\"" ? {} : { contactId: ($contactId | fromjson) } )
+            + ( $assigneeId == "\"\"" ? {} : { assignedUserId: ($assigneeId | fromjson) } )
+            ' > opp.json
+
+          # POST /opportunities
+          RESP=$(curl -sS -X POST "https://services.leadconnectorhq.com/opportunities/" \
+            -H "$AUTH" -H "$VER" -H "$CT" \
+            --data-binary @opp.json)
+
+          echo "$RESP" > opp_resp.json
+          echo "STATUS=$(jq -r '.status // .success // empty' opp_resp.json)" >> $GITHUB_OUTPUT || true
+        # Create Opportunity endpoint is documented in GHL’s public API. 
+        # Ref: Create Opportunity.  [oai_citation:5‡GoHighLevel Marketplace](https://marketplace.gohighlevel.com/docs/ghl/opportunities/create-opportunity/index.html?utm_source=chatgpt.com)
+
+      - name: Acknowledge in GitHub
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.payload.issue.number,
+              body: "✅ Received — we created a private support record in our system and will follow up by email."
+            });
+
+      - name: Redact & close the public issue
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.payload.issue.number;
+            await github.rest.issues.update({
+              ...context.repo,
+              issue_number,
+              title: `[REDACTED] ${context.payload.issue.title}`.slice(0, 240),
+              body: "_This ticket was forwarded to our support system and redacted for your privacy._"
+            });
+            await github.rest.issues.lock({
+              ...context.repo,
+              issue_number,
+              lock_reason: 'resolved'
+            });
+            await github.rest.issues.update({
+              ...context.repo,
+              issue_number,
+              state: 'closed'
+            });
