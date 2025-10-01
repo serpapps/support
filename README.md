@@ -10,6 +10,5 @@ Each product has it's own [repository](https://github.com/orgs/serpapps/reposito
 2. **RELEASES**: Download the latest version of the application or access previous releases and pre-releases in the repository's `/releases` area.
 3. [**DISCUSSIONS**](https://github.com/orgs/serpapps/discussions): This is the "help center" where you'll find answers to FAQs and help articles
 4. [**PROJECTS**](https://github.com/orgs/serpapps/projects): Follow along with development progress, view roadmaps and see what features are currently being worked on.
-5. **SUPPORT**: If you need general help, you can submit a [SUPPORT ISSUE](https://github.com/serpapps/support/issues) or you can [hop on SERP Chat directly with this link](https://serp.ly/@serp/support)
-
+5. **SUPPORT**: If you need general help, you can hop on [chat support here] (bottom right)(https://serpcompany.tawk.help/) or [submit a ticket here (top menu bar)](https://serpcompany.tawk.help/)
 We also have a free community called [SERP University](https://serp.ly/@serp/community) you can join to connect with the SERP team, other users, discuss features, share tips, etc. This is not a "support forum" so do not post your support-related questions here.
