@@ -1,8 +1,14 @@
 ![SERP_banner](https://github.com/user-attachments/assets/6da22887-0c34-4e61-aaa7-9624b6319412)
 
-Welcome
+Welcome!
 
 This is the official area for [SERP](https://serp.co/) software product releases with a dedicated repository for each of our applications.
+
+## Click to watch the welcome video
+
+<a href="https://www.youtube.com/watch?v=eTXRjdODowE" target="_blank">
+<img src="https://raw.githubusercontent.com/devinschumacher/uploads/refs/heads/main/images/welcome-to-serp-apps.jpg" width="700px">
+</a>
 
 Each product has it's own [repository](https://github.com/orgs/serpapps/repositories) for:
 
