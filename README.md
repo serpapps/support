@@ -4,11 +4,15 @@ Welcome!
 
 This is the official area for [SERP](https://serp.co/) software product releases with a dedicated repository for each of our applications.
 
-## Click to watch the welcome video
+## Click to watch the welcome video 👇
 
 <a href="https://www.youtube.com/watch?v=eTXRjdODowE" target="_blank">
-<img src="https://raw.githubusercontent.com/devinschumacher/uploads/refs/heads/main/images/welcome-to-serp-apps.jpg" width="700px">
+<img src="https://raw.githubusercontent.com/devinschumacher/uploads/refs/heads/main/images/welcome-to-serp-apps-1760042151676.jpg" width="900px">
 </a>
+
+<br><br>
+
+### Github Guide
 
 Each product has it's own [repository](https://github.com/orgs/serpapps/repositories) for:
 
