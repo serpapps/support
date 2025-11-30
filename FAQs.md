@@ -20,7 +20,9 @@ It depends on the size of the video you are trying to download and your internet
 
 ### Is my data private?
 
-All detection and conversion happen locally. Only licence checks touch remote servers, and no viewing history or passwords are stored.
+All detection and conversion happen locally. Only licence checks touch our servers. No viewing history or passwords are stored.
+
+We recommend using our [SERP VPN](https://serp.ly/serp-vpn) extension to hide your IP and location.
 
 ### Is this legal?
 
@@ -33,3 +35,4 @@ That said, here are a few widely accepted best practices for safe, responsible d
 1.  Only download content you created, own, or have explicit permission from the rights holder to access.
 2.  Protect your personal data by respecting platform rules and rate limits with reasonable download speeds to avoid automated abuse systems putting your account at risk.
 3.  Protect your privacy by using a reputable VPN for IP protection before initiating downloads — [this is the VPN we recommend & use](https://serp.ly/best/vpn).
+
