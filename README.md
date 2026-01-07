@@ -18,7 +18,6 @@ Each product has it's own [repository](https://github.com/orgs/serpapps/reposito
 
 1. **ISSUES**: Submit application specific problems, bugs, issues in the `/issues` area of the relevant application's repository.
 2. **RELEASES**: Download the latest version of the application or access previous releases and pre-releases in the repository's `/releases` area.
-3. [**DISCUSSIONS**](https://github.com/orgs/serpapps/discussions): This is the "help center" where you'll find answers to FAQs and help articles
+3. [**DISCUSSIONS**](https://help.serp.co): Is our "help center" where you'll find answers to FAQs and help articles and chat support
 4. [**PROJECTS**](https://github.com/orgs/serpapps/projects): Follow along with development progress, view roadmaps and see what features are currently being worked on.
-5. **SUPPORT**: If you need general help, you can hop on chat support or read our helpful articles: http://help.serp.co/
-We also have a free community called [SERP University](https://serp.ly/@serp/community) you can join to connect with the SERP team, other users, discuss features, share tips, etc. This is not a "support forum" so do not post your support-related questions here.
+5. **COMMUNITY**: We also have a free community called [SERP University](https://serp.ly/@serp/community) you can join to connect with the SERP team, other users, discuss features, share tips, etc. This is not a "support forum" so do not post your support-related questions here.
